@@ -2,7 +2,7 @@
 fs = {}
 cwd = [fs]
 mode = 'cmd'
-for l in open('test7.txt'):
+for l in open('day7.txt'):
     l = l.strip().split()
     if l[0] == '$':
         mode = 'cmd'
@@ -24,17 +24,15 @@ for l in open('test7.txt'):
         else:
             cwd[-1][l[1]] = int(l[0])
 
-print(fs)
-
-def du(folder, cb):
+def du(folder, cb, path=()):
     res = 0
     for k,v in folder.items():
         if isinstance(v, int):
             #print(k,v)
             res += v
         else:
-            sd = du(v, cb)
-            cb(k, sd)
+            sd = du(v, cb, path+(k,))
+            cb(path+(k,), sd)
             res += sd
 
     return res
@@ -56,3 +54,9 @@ dirs['/'] = du(fs, dirs.__setitem__ )
 
 print(dirs)
 print(sum(s for d,s in dirs.items() if s<=100000))
+
+capacity = 70000000
+free = capacity - dirs['/']
+needed = 30000000 - free
+
+print(min((v,k) for k,v in dirs.items() if v>=needed))
