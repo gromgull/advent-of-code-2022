@@ -18,6 +18,9 @@ for i,v in enumerate(valves):
     for o in valves[v][1]:
         g[i, idx[o]] = 1
 
+valves = list(valves)
+
+aa = valves.index('AA')
 
 print(g)
 
@@ -55,47 +58,51 @@ flows = g.diagonal()
 flow_valves = list(flows.nonzero()[0])
 print(len(flow_valves))
 
-# hah!
-# n = 0
-# for x in permutations(list(g.diagonal().nonzero()[0])):
-#     n += 1
-# print(n)
+cache = {}
 
-def score(order):
+def find_best(options, here=aa, time=30):
 
-    n = 0
-    flow = 0
-    time = 30
-    for o in order:
-        if time<0: break
-        flow += (time - paths[n,o] - 1)*flows[o]
-        time -= paths[n,o]+1
-        n = o
+    if not options: return [], 0
 
-    print(order, flow)
-    return flow
+    key = (options, here, time)
 
-
-
-def find_best(options, best=0, sol=[], time=30):
-
-    if not options: return sol, score(sol)
-
-    max_score = score(sol) + time*flows[ [ v for v in flow_valves if v not in sol ]].sum()
-    if max_score<best:
-        return None, None
+    #if key in cache: return cache[key][0], cache[key][1]
 
     b = 0
-    res = None
+    res = []
     for v in options:
-        if v in sol: continue
+        new_time = time-paths[here,v]-1
+        if new_time <= 0: continue
 
-        r, s = find_best(options - {v}, best, sol+[v], time-paths[sol[-1] if sol else 0,v]-1)
-        if r is None: continue
-        if s>b:
+        r, s = find_best(options - {v}, v, new_time)
+
+        s += new_time*flows[v]
+        r = [v] + r
+
+        if s > b:
             b = s
             res = r
 
+    cache[key] = res, b
+
     return res, b
 
-print(find_best(frozenset(flow_valves)))
+solution, score = find_best(frozenset(flow_valves))
+
+print(solution)
+
+
+print('possible:')
+for v in flow_valves: print(valves[v], flows[v])
+
+print('solution:')
+time = 30
+here = aa
+for step in solution:
+    time -= paths[here, step] + 1
+    here = step
+    print(time, valves[step], flows[step])
+
+print(score)
+
+#print(cache)
